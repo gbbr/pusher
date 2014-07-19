@@ -25,7 +25,6 @@ PressureDetector.prototype = {
 
 	// Invoked when pressure changes
 	_listener: null,
-	_interval: null,
 
 	applyPressure: function (event) {
 		this.position = {
@@ -33,27 +32,11 @@ PressureDetector.prototype = {
 			y: event.layerY
 		};
 
-		clearInterval(this._interval);
-
-		this._interval = setInterval(function() {
-			if (this.pressure >= this.MAX_PRESSURE) {
-				clearInterval(this._interval);
-			} else {
-				this.setPressure(this.pressure + 1);
-			}
-		}.bind(this), this.INCREASE_SPEED_MS);
+		this.setPressure(1);
 	},
 
 	releasePressure: function () {
-		clearInterval(this._interval);
-
-		this._interval = setInterval(function() {
-			if (this.pressure == 0) {
-				clearInterval(this._interval);
-			} else {
-				this.setPressure(this.pressure - 1);
-			}
-		}.bind(this), this.INCREASE_SPEED_MS);
+		this.setPressure(0);
 	},
 
 	setPressure: function (v) {

@@ -2,6 +2,7 @@ package broadcast
 
 import (
 	"code.google.com/p/go.net/websocket"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -21,12 +22,14 @@ type Client struct {
 }
 
 // Send back via socket when incoming message is available
-func (client *Client) ListenTo(incoming chan string) {
+func (client *Client) ListenTo(broadcast chan string) {
 LISTENER_LOOP:
 	for {
 		select {
-		case msg := <-incoming:
+		case msg := <-broadcast:
 			websocket.Message.Send(client.connection, msg)
+			fmt.Println(client.connection)
+			fmt.Printf("%s\n", msg)
 		case <-client.terminate:
 			break LISTENER_LOOP
 		}
@@ -64,8 +67,8 @@ func (server *Server) Start(path string) {
 func (server *Server) AddClient(client Client) {
 	server.connections = append(server.connections, client)
 
-	go server.ReceiveFrom(client)
-	client.ListenTo(server.broadcast)
+	go client.ListenTo(server.broadcast)
+	server.ReceiveFrom(client)
 }
 
 // Receives messages from client and broadcast

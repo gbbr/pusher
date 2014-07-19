@@ -43,7 +43,7 @@ socket.onopen = function (event) {
 			r: pressure,
 			c: color
 		};
-
+console.log("SENDING");
 		socket.send(JSON.stringify(circle));
 
 		log("valueX", position.x);
@@ -52,6 +52,7 @@ socket.onopen = function (event) {
 	});
 
 	socket.onmessage = function (msg) {
+console.log("RECEIVING");
 		var circleData = JSON.parse(msg.data);
 		drawCircle(canvas, circleData);
 	}
