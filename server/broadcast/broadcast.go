@@ -20,28 +20,33 @@ func (server *Server) Start(path string) {
 	onConnected := func(ws *websocket.Conn) {
 		defer ws.Close()
 		server.connections = append(server.connections, ws)
-		server.Broadcast(ws)
+		server.Register(ws)
 	}
 
 	http.Handle(path, websocket.Handler(onConnected))
 }
 
-// Receives messages from client and broadcast to all
-func (server *Server) Broadcast(client *websocket.Conn) {
+// Receives messages from client and broadcast
+func (server *Server) Register(client *websocket.Conn) {
 	var msg string
 RECEIVE_LOOP:
 	for {
 		switch websocket.Message.Receive(client, &msg) {
 		case nil:
-			for _, socket := range server.connections {
-				go func(ws *websocket.Conn) {
-					websocket.Message.Send(ws, msg)
-				}(socket)
-			}
+			server.Broadcast(msg)
 		case io.EOF:
 			server.RemoveClient(client)
 			break RECEIVE_LOOP
 		}
+	}
+}
+
+// Broadcast a message to all connections
+func (server *Server) Broadcast(msg string) {
+	for _, socket := range server.connections {
+		go func(ws *websocket.Conn) {
+			websocket.Message.Send(ws, msg)
+		}(socket)
 	}
 }
 
