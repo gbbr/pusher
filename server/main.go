@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	server := new(server.Server)
+	server := server.New()
 	go server.Start()
 	http.Handle("/", http.FileServer(http.Dir("client")))
 
