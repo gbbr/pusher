@@ -51,18 +51,17 @@ type Server struct {
 
 // Listen to WebSocket connections and register clients to
 // communication channels
-func (server *Server) Start() {
+func (server *Server) Start(path string) {
 	onConnected := func(ws *websocket.Conn) {
 		defer ws.Close()
-		server.AddClient(ws)
+		server.AddClient(Client{ws, make(chan bool)})
 	}
 
-	http.Handle("/pipe", websocket.Handler(onConnected))
+	http.Handle(path, websocket.Handler(onConnected))
 }
 
 // Receive message from connection and send to communication channel
-func (server *Server) AddClient(ws *websocket.Conn) {
-	client := Client{ws, make(chan bool)}
+func (server *Server) AddClient(client Client) {
 	server.connections = append(server.connections, client)
 
 	go server.ReceiveFrom(client)
