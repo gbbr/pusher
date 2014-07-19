@@ -21,7 +21,7 @@ type Client struct {
 }
 
 // Send back via socket when incoming message is available
-func (client *Client) Listen(incoming chan string) {
+func (client *Client) ListenTo(incoming chan string) {
 LISTENER_LOOP:
 	for {
 		select {
@@ -65,9 +65,10 @@ func (server *Server) AddClient(client Client) {
 	server.connections = append(server.connections, client)
 
 	go server.ReceiveFrom(client)
-	client.Listen(server.broadcast)
+	client.ListenTo(server.broadcast)
 }
 
+// Receives messages from client and broadcast
 func (server *Server) ReceiveFrom(client Client) {
 	var msg string
 RECEIVE_LOOP:
