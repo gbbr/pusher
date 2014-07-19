@@ -2,44 +2,13 @@ package broadcast
 
 import (
 	"code.google.com/p/go.net/websocket"
-	"fmt"
 	"io"
 	"net/http"
 )
 
 // Initializes a new server
 func New() *Server {
-	return &Server{make([]Client, 0, 10), make(chan string)}
-}
-
-/*
-CLIENT
-Listens to incoming messages and sends them to socket
-*/
-type Client struct {
-	connection *websocket.Conn
-	terminate  chan bool
-}
-
-// Send back via socket when incoming message is available
-func (client *Client) ListenTo(broadcast chan string) {
-LISTENER_LOOP:
-	for {
-		select {
-		case msg := <-broadcast:
-			websocket.Message.Send(client.connection, msg)
-			fmt.Println(client.connection)
-			fmt.Printf("%s\n", msg)
-		case <-client.terminate:
-			break LISTENER_LOOP
-		}
-	}
-}
-
-// Terminate connection and trigger breaking of listener
-func (client *Client) Terminate() {
-	client.connection.Close()
-	client.terminate <- true
+	return &Server{make([]*websocket.Conn, 0, 10)}
 }
 
 /*
@@ -48,8 +17,7 @@ Receives connections, creates new clients and feeds incoming messages
 to communication channel
 */
 type Server struct {
-	connections []Client
-	broadcast   chan string
+	connections []*websocket.Conn
 }
 
 // Listen to WebSocket connections and register clients to
@@ -57,28 +25,30 @@ type Server struct {
 func (server *Server) Start(path string) {
 	onConnected := func(ws *websocket.Conn) {
 		defer ws.Close()
-		server.AddClient(Client{ws, make(chan bool)})
+		server.AddClient(ws)
 	}
 
 	http.Handle(path, websocket.Handler(onConnected))
 }
 
 // Receive message from connection and send to communication channel
-func (server *Server) AddClient(client Client) {
-	server.connections = append(server.connections, client)
-
-	go client.ListenTo(server.broadcast)
-	server.ReceiveFrom(client)
+func (server *Server) AddClient(ws *websocket.Conn) {
+	server.connections = append(server.connections, ws)
+	server.Broadcast(ws)
 }
 
 // Receives messages from client and broadcast
-func (server *Server) ReceiveFrom(client Client) {
+func (server *Server) Broadcast(client *websocket.Conn) {
 	var msg string
 RECEIVE_LOOP:
 	for {
-		switch websocket.Message.Receive(client.connection, &msg) {
+		switch websocket.Message.Receive(client, &msg) {
 		case nil:
-			server.broadcast <- msg
+			for _, socket := range server.connections {
+				go func(ws *websocket.Conn) {
+					websocket.Message.Send(ws, msg)
+				}(socket)
+			}
 		case io.EOF:
 			server.RemoveClient(client)
 			break RECEIVE_LOOP
@@ -87,11 +57,11 @@ RECEIVE_LOOP:
 }
 
 // Close connection and remove from pool
-func (server *Server) RemoveClient(client Client) {
-	for i, conn := range server.connections {
-		if conn == client {
+func (server *Server) RemoveClient(socket *websocket.Conn) {
+	for i, client := range server.connections {
+		if client == socket {
 			server.connections = append(server.connections[:i], server.connections[i+1:]...)
-			client.Terminate()
+			socket.Close()
 			break
 		}
 	}
