@@ -42,10 +42,22 @@ func (server *Server) RegisterConnection(ws *websocket.Conn, c chan string) {
 		}
 
 		if err == io.EOF {
-			fmt.Println("Disconnected.")
-			ws.Close()
+			server.CloseConnection(ws)
 		}
 	}
+}
+
+// Close connection and remove from pool
+func (server *Server) CloseConnection(ws *websocket.Conn) {
+	for i, conn := range server.connections {
+		if conn == ws {
+			server.connections = append(server.connections[:i], server.connections[i+1:]...)
+			break
+		}
+	}
+
+	fmt.Printf("Disconnected. Remaining connections: %d\n", len(server.connections))
+	ws.Close()
 }
 
 // Wait for incoming messages and broadcast to all connections
@@ -57,8 +69,8 @@ func (server *Server) Listen(c chan string) {
 }
 
 // Broadcast message to all connections
-func (s *Server) Broadcast(msg string) {
-	for _, conn := range s.connections {
+func (server *Server) Broadcast(msg string) {
+	for _, conn := range server.connections {
 		websocket.Message.Send(conn, msg)
 	}
 }
@@ -66,11 +78,9 @@ func (s *Server) Broadcast(msg string) {
 func main() {
 	server := new(Server)
 	go server.Start()
-
 	http.Handle("/", http.FileServer(http.Dir("client")))
-	err := http.ListenAndServe(":888", nil)
 
-	if err != nil {
-		fmt.Println("Error initiating file server")
+	if err := http.ListenAndServe(":888", nil); err != nil {
+		fmt.Println("Error initiating file server. Maybe you lack permissions?")
 	}
 }
