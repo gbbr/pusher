@@ -16,7 +16,7 @@ function PressureDetector(el) {
 }
 
 PressureDetector.prototype = {
-	MAX_PRESSURE      : 10,
+	MAX_PRESSURE      : 40,
 	INCREASE_SPEED_MS : 10,
 
 	// Canvas object
