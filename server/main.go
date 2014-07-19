@@ -57,7 +57,6 @@ func (server *Server) CloseConnection(ws *websocket.Conn) {
 		}
 	}
 
-	fmt.Printf("Disconnected. Remaining connections: %d\n", len(server.connections))
 	ws.Close()
 }
 
