@@ -17,7 +17,7 @@ var canvas = document.getElementById("surface"),
 	drawCircle = function (canvas, circle) {
 		var context = canvas.getContext("2d");
 
-		// context.clearRect(0, 0, canvas.width, canvas.height);
+		if (circle.r <= 0) context.clearRect(0, 0, canvas.width, canvas.height);
 
 		context.beginPath();
 			context.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI, false);
