@@ -36,8 +36,14 @@ func (server *Server) RegisterConnection(ws *websocket.Conn, c chan string) {
 
 	for {
 		err := websocket.Message.Receive(ws, &msg)
-		if err == nil && err != io.EOF {
+
+		if err == nil {
 			c <- msg
+		}
+
+		if err == io.EOF {
+			fmt.Println("Disconnected.")
+			ws.Close()
 		}
 	}
 }
