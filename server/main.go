@@ -36,7 +36,7 @@ func (server *Server) RegisterConnection(ws *websocket.Conn, c chan string) {
 
 	for {
 		err := websocket.Message.Receive(ws, &msg)
-		fmt.Print("X")
+
 		if err == nil {
 			c <- msg
 		}
