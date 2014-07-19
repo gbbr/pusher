@@ -1,6 +1,8 @@
 var canvas = document.getElementById("surface"),
 	canvas2 = document.getElementById("incoming"),
 
+	circles = {},
+
 	log = function (elementId, value) {
 		document.getElementById(elementId).innerHTML = value;
 	},
@@ -43,7 +45,7 @@ socket.onopen = function (event) {
 			r: pressure,
 			c: color
 		};
-console.log("SENDING");
+
 		socket.send(JSON.stringify(circle));
 
 		log("valueX", position.x);
@@ -52,7 +54,6 @@ console.log("SENDING");
 	});
 
 	socket.onmessage = function (msg) {
-console.log("RECEIVING");
 		var circleData = JSON.parse(msg.data);
 		drawCircle(canvas, circleData);
 	}

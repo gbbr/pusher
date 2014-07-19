@@ -11,33 +11,22 @@ func New() *Server {
 	return &Server{make([]*websocket.Conn, 0, 10)}
 }
 
-/*
-SERVER
-Receives connections, creates new clients and feeds incoming messages
-to communication channel
-*/
 type Server struct {
 	connections []*websocket.Conn
 }
 
-// Listen to WebSocket connections and register clients to
-// communication channels
+// Start server on give URL
 func (server *Server) Start(path string) {
 	onConnected := func(ws *websocket.Conn) {
 		defer ws.Close()
-		server.AddClient(ws)
+		server.connections = append(server.connections, ws)
+		server.Broadcast(ws)
 	}
 
 	http.Handle(path, websocket.Handler(onConnected))
 }
 
-// Receive message from connection and send to communication channel
-func (server *Server) AddClient(ws *websocket.Conn) {
-	server.connections = append(server.connections, ws)
-	server.Broadcast(ws)
-}
-
-// Receives messages from client and broadcast
+// Receives messages from client and broadcast to all
 func (server *Server) Broadcast(client *websocket.Conn) {
 	var msg string
 RECEIVE_LOOP:
