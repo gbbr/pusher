@@ -1,13 +1,13 @@
 package main
 
 import (
-	"./server"
+	"./broadcast"
 	"fmt"
 	"net/http"
 )
 
 func main() {
-	server := server.New()
+	server := broadcast.New()
 	go server.Start()
 	http.Handle("/", http.FileServer(http.Dir("client")))
 
