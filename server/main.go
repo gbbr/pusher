@@ -7,36 +7,55 @@ import (
 	"net/http"
 )
 
+type Client struct {
+	connection *websocket.Conn
+	doneChan   chan bool
+}
+
 type Server struct {
-	connections []*websocket.Conn
+	connections []Client
+	comm        chan string
 }
 
 // Listen to WebSocket connections and register clients to
 // communication channels
 func (server *Server) Start() {
-	communication := make(chan string)
-	server.connections = make([]*websocket.Conn, 0, 10)
+	server.connections = make([]Client, 0, 10)
+	server.comm = make(chan string)
 
 	onConnected := func(ws *websocket.Conn) {
 		defer ws.Close()
-		server.RegisterConnection(ws, communication)
+		server.RegisterConnection(ws)
 	}
 
 	http.Handle("/pipe", websocket.Handler(onConnected))
 }
 
 // Receive message from connection and send to communication channel
-func (server *Server) RegisterConnection(ws *websocket.Conn, c chan string) {
+func (server *Server) RegisterConnection(ws *websocket.Conn) {
 	var msg string
-	server.connections = append(server.connections, ws)
+	client := Client{ws, make(chan bool)}
+	server.connections = append(server.connections, client)
 
 	fmt.Println("Connected.")
+
+	go func() {
+	CLIENT_LOOP:
+		for {
+			select {
+			case inc := <-server.comm:
+				websocket.Message.Send(ws, inc)
+			case <-client.doneChan:
+				break CLIENT_LOOP
+			}
+		}
+	}()
 
 	for {
 		err := websocket.Message.Receive(ws, &msg)
 
 		if err == nil {
-			server.Broadcast(msg)
+			server.comm <- msg
 		}
 
 		if err == io.EOF {
@@ -48,20 +67,13 @@ func (server *Server) RegisterConnection(ws *websocket.Conn, c chan string) {
 
 // Close connection and remove from pool
 func (server *Server) CloseConnection(ws *websocket.Conn) {
-	for i, conn := range server.connections {
-		if conn == ws {
+	for i, client := range server.connections {
+		if client.connection == ws {
+			client.doneChan <- true
 			server.connections = append(server.connections[:i], server.connections[i+1:]...)
+			ws.Close()
 			break
 		}
-	}
-
-	ws.Close()
-}
-
-// Broadcast message to all connections
-func (server *Server) Broadcast(msg string) {
-	for _, conn := range server.connections {
-		websocket.Message.Send(conn, msg)
 	}
 }
 
