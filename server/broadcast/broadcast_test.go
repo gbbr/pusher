@@ -15,7 +15,7 @@ const (
 	TEST_MESSAGE = "Ping Pong"
 )
 
-func TestBroadcastAndClose(t *testing.T) {
+func TestBroadcast(t *testing.T) {
 	var (
 		addr    string
 		clients [5]*websocket.Conn
