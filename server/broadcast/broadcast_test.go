@@ -23,7 +23,7 @@ func TestBroadcaster(t *testing.T) {
 		msg     string
 	)
 
-	// Start broadcast on path /test
+	// Start broadcast on set path
 	server := New()
 	server.Start(SOCKET_PATH)
 
