@@ -3,7 +3,6 @@ package broadcast
 import (
 	"code.google.com/p/go.net/websocket"
 	"fmt"
-	"log"
 	"net/http/httptest"
 	"testing"
 )
@@ -30,13 +29,13 @@ func TestBroadcast(t *testing.T) {
 	// Test server
 	ts := httptest.NewServer(nil)
 	addr = ts.Listener.Addr().String()
-	log.Print("Test server listening on ", addr)
+	fmt.Println("Test server listening on ", addr)
 
 	// Set up 5 clients
 	for i := 0; i < 5; i++ {
 		clients[i], err = websocket.Dial(fmt.Sprintf(FULL_ADDRESS, addr), "", ORIGIN)
 		if err != nil {
-			log.Fatal("Failed connecting")
+			fmt.Println("Failed connecting")
 		}
 	}
 
@@ -45,7 +44,7 @@ func TestBroadcast(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		websocket.Message.Receive(clients[i], &msg)
 		if msg != TEST_MESSAGE {
-			log.Println("Message not received or invalid")
+			fmt.Println("Message not received or invalid")
 			t.Fail()
 		}
 	}
