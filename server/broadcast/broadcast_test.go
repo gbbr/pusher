@@ -39,8 +39,10 @@ func TestBroadcast(t *testing.T) {
 		}
 	}
 
-	// Send message from client 1 and test broadcast
+	// Send message
 	websocket.Message.Send(clients[0], TEST_MESSAGE)
+
+	// Test broadcast
 	for i := 0; i < 5; i++ {
 		websocket.Message.Receive(clients[i], &msg)
 		if msg != TEST_MESSAGE {
