@@ -15,7 +15,7 @@ type Server struct {
 	connections []*websocket.Conn
 }
 
-// Start server on give URL
+// Start server on given URL
 func (server *Server) Start(path string) {
 	onConnected := func(ws *websocket.Conn) {
 		defer ws.Close()
