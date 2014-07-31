@@ -8,7 +8,7 @@ import (
 
 func main() {
 	server := broadcast.New()
-	go server.Start("/pipe")
+	server.Start("/pipe")
 
 	http.Handle("/", http.FileServer(http.Dir("client")))
 
