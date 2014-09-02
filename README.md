@@ -2,6 +2,7 @@ Pusher
 ======
 
 _WARNING_:  
+
 Data race occurs here. Do not use this library on a heavily loaded environment. This is no longer maintained.
 
 Concurrent WebSockets with Go. 
